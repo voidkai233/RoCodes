@@ -1,0 +1,1 @@
+import {NextResponse} from 'next/server';import {getGames} from '../../../lib/roblox';export async function GET(){return NextResponse.json({scope:'tracked-catalog',updatedAt:new Date().toISOString(),games:await getGames()},{headers:{'Cache-Control':'public, s-maxage=180, stale-while-revalidate=60'}})}
