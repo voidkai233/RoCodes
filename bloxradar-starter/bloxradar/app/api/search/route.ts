@@ -1,1 +1,0 @@
-import {NextRequest,NextResponse} from 'next/server';import {getGames} from '../../../lib/roblox';export async function GET(req:NextRequest){const q=(req.nextUrl.searchParams.get('q')||'').slice(0,100).toLowerCase();return NextResponse.json({games:(await getGames()).filter(g=>g.name.toLowerCase().includes(q))})}
