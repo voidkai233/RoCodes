@@ -41,6 +41,52 @@ for (const source of sources) {
     console.error('Source failed:', source.name, String(error));
   }
 }
+
+/** Read only public Roblox game descriptions; treat every extracted string as unverified. */
+async function collectRobloxDescriptions() {
+  const placeIds = [...knownIds];
+  for (const placeId of placeIds) {
+    try {
+      // Catalog IDs are Roblox place IDs, not universe IDs.
+      const lookup = await fetch('https://apis.roblox.com/universes/v1/places/' + placeId + '/universe', {
+        signal: AbortSignal.timeout(12000), redirect: 'error',
+        headers: { 'User-Agent': 'RoCodes/1.0 (public game metadata)' }
+      });
+      if (!lookup.ok) throw Error('Universe lookup HTTP ' + lookup.status);
+      const universeId = Number((await lookup.json()).universeId);
+      if (!Number.isSafeInteger(universeId) || universeId <= 0) throw Error('Invalid universe ID');
+      const endpoint = 'https://games.roblox.com/v1/games?universeIds=' + universeId;
+      const response = await fetch(endpoint, { signal: AbortSignal.timeout(12000), redirect: 'error',
+        headers: { 'User-Agent': 'RoCodes/1.0 (public game metadata)' } });
+      if (!response.ok) throw Error('Roblox HTTP ' + response.status);
+      const game = (await response.json()).data?.find(g => g.id === universeId);
+      if (!game || typeof game.description !== 'string') throw Error('Missing description');
+      const lines = game.description.split(/\r?\n/).slice(0, 180);
+      let found = 0;
+      for (const line of lines) {
+        // Only accept explicitly labeled code lines, never random uppercase words or links.
+        const match = line.match(/(?:^|\s)(?:code|codes|redeem code|new code)\s*[:：-]\s*[`"'“]?([A-Za-z0-9_!-]{4,40})\b/i);
+        if (!match) continue;
+        const code = match[1];
+        if (/^(none|soon|coming|update|expired|roblox|discord|codes)$/i.test(code)) continue;
+        const key = placeId + ':' + code.toUpperCase();
+        const previous = output.get(key);
+        output.set(key, { gameId: placeId, code, reward: previous?.reward || 'See official game description',
+          status: 'pending', firstSeen: previous?.firstSeen || now, lastSeen: now,
+          sourceUrl: 'https://www.roblox.com/games/' + placeId,
+          sourceName: 'Roblox game description' });
+        found++;
+      }
+      console.log('Official description checked:', placeId, 'candidates:', found);
+    } catch (error) {
+      // One unavailable game must not stop collection of other games.
+      console.warn('Roblox description unavailable:', placeId, String(error));
+    }
+  }
+}
+
+await collectRobloxDescriptions();
+
 const sorted = [...output.values()].sort((a,b) => a.gameId-b.gameId || a.code.localeCompare(b.code));
 await writeFile('data/collected-codes.json', JSON.stringify(sorted, null, 2) + '\n');
 console.log('Saved', sorted.length, 'unverified candidate codes; failed sources:', failures);
