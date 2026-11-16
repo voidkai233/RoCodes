@@ -1,9 +1,62 @@
-import collectedCodes from '../../../data/collected-codes.json';
-import {notFound} from 'next/navigation';import Link from 'next/link';import type {Metadata} from 'next';import {catalog} from '../../../data/catalog';import {getGames,formatNumber} from '../../../lib/roblox';import {Thumb,CopyCode} from '../../components';
+import {notFound} from 'next/navigation';
+import Link from 'next/link';
+import type {Metadata} from 'next';
+import {catalog} from '../../../data/catalog';
+import {manualContent} from '../../../data/manual-content';
+import {getGames} from '../../../lib/roblox';
+import {Thumb,CopyCode} from '../../components';
+
 export async function generateStaticParams(){return catalog.map(g=>({id:String(g.id)}))}
 export async function generateMetadata({params}:{params:Promise<{id:string}>}):Promise<Metadata>{
- const {id}=await params;
- const g=catalog.find(x=>x.id===Number(id));
- return {title:g?`${g.name} Codes & Player Count`:'Game Not Found',description:g?`Find ${g.name} Roblox codes, redemption instructions and player information.`:'Game not found'};
+  const {id}=await params;
+  const entry=catalog.find(x=>x.id===Number(id));
+  return {title:entry?`All Working ${entry.name} Codes`:'Game Not Found',description:entry?`Working and expired ${entry.name} Roblox codes, redemption guide, and latest manually checked date.`:'Game not found'};
 }
-export default async function Page({params}:{params:Promise<{id:string}>}){const id=Number((await params).id);const entry=catalog.find(x=>x.id===id);if(!entry)notFound();const g=(await getGames()).find(x=>x.id===id);if(!g)notFound();const active=entry.codes.filter(x=>x.status==='active');const expired=entry.codes.filter(x=>x.status==='expired');const pending=(collectedCodes as Array<{gameId:number;code:string;reward:string;sourceUrl:string;sourceName:string;status:string}>).filter(x=>x.gameId===id);return <main className="shell"><div className="pagehead"><Link className="more" href="/codes">← All game codes</Link></div><div className="detail"><Thumb game={g}/><div><div className="eyebrow">{entry.category}</div><h1>{g.name} Codes</h1><p className="muted">{g.source==='live'?`${formatNumber(g.playing)} players online · ${formatNumber(g.visits)} visits`:'Player data temporarily unavailable'}</p>{g.placeId>0&&<a className="more" href={`https://www.roblox.com/games/${g.placeId}`} target="_blank" rel="noopener noreferrer">Play on Roblox ↗</a>}</div></div><section className="section"><h2>Active {g.name} codes</h2><div className="panel">{active.length?<table className="codes"><thead><tr><th>Code</th><th>Reward</th><th>Copy</th></tr></thead><tbody>{active.map(c=><tr key={c.code}><td className="code">{c.code}</td><td>{c.reward}</td><td><CopyCode value={c.code}/></td></tr>)}</tbody></table>:<div className="empty">No active codes have been independently verified for this game yet. This does not mean the game has no codes.</div>}</div><h2>Discovered codes — pending verification</h2><div className="panel">{pending.length?<table className="codes"><thead><tr><th>Code</th><th>Reported reward</th><th>Source</th><th>Copy</th></tr></thead><tbody>{pending.map(x=><tr key={x.code}><td className="code">{x.code}<div className="muted small">Not verified</div></td><td>{x.reward}</td><td><a href={x.sourceUrl} target="_blank" rel="noopener noreferrer nofollow">{x.sourceName}</a></td><td><CopyCode value={x.code}/></td></tr>)}</tbody></table>:<div className="empty">No unverified codes collected from authorized feeds yet.</div>}</div><p className="muted small">These are automatically imported leads, NOT confirmed working codes. Only try codes in the game's official redemption interface.</p><p className="muted small">Verification records are editorially maintained. Code availability may change without notice.</p></section><section className="section article"><h2>How to redeem codes in {g.name}</h2><p>{entry.guide}</p><h2>About {g.name}</h2><p>{entry.description}</p><p>{g.description.slice(0,500)}</p><h2>Expired codes</h2>{expired.length?<p>{expired.map(x=>x.code).join(', ')}</p>:<p>No expired codes have been added to our verified archive.</p>}<h2>How to check if a code is legitimate</h2><p>Use only the game’s own redemption interface. Check the developer’s official Roblox group or announcements for new codes. Never enter your Roblox password on a third-party code site, and avoid offers that promise free Robux in exchange for account details.</p></section></main>}
+
+export default async function Page({params}:{params:Promise<{id:string}>}){
+  const id=Number((await params).id);
+  const entry=catalog.find(x=>x.id===id);
+  if(!entry)notFound();
+  const game=(await getGames()).find(x=>x.id===id);
+  const custom=manualContent[id];
+  const active=custom?.activeCodes ?? entry.codes.filter(c=>c.status==='active').map(c=>({code:c.code,reward:c.reward}));
+  const expired=custom?.expiredCodes ?? entry.codes.filter(c=>c.status==='expired').map(c=>c.code);
+  const guide=custom?.tutorial?.length?custom.tutorial:[{text:entry.guide}];
+  const description=custom?.officialDescription || game?.description || entry.description;
+  const checked=custom?.lastChecked;
+  return <main className="shell code-page">
+    <div className="pagehead"><Link className="more" href="/codes">← Browse all games</Link></div>
+    <div className="code-layout">
+      <article className="code-main">
+        <div className="game-cover">
+          {custom?.coverImage?<img src={custom.coverImage} alt={entry.name+' game cover'}/>:game?<Thumb game={game}/>:<div className="cover-fallback">◆</div>}
+          <div className="cover-caption"><span className="eyebrow">{entry.category}</span><h1>{entry.name} Codes</h1></div>
+        </div>
+        <section className="code-section">
+          <h2>About {entry.name}</h2>
+          <p className="game-description">{description}</p>
+          <p className="muted small">Game information: {custom?.officialDescription?'Manually entered description':'Roblox game listing / editorial summary'}. <a className="more" href={`https://www.roblox.com/games/${id}`} target="_blank" rel="noopener noreferrer">Official game page ↗</a></p>
+        </section>
+        <section className="code-section">
+          <h2>All Working {entry.name} Codes</h2>
+          <p className="muted">Last manually checked: <strong>{checked || 'Not yet verified'}</strong></p>
+          <h3>Active Codes</h3>
+          <div className="code-table-wrap"><table className="manual-codes"><thead><tr><th>Code</th><th>Copy</th></tr></thead><tbody>{active.length?active.map(item=><tr key={item.code}><td><span className="code-value">{item.code}</span>{item.reward&&<span className="code-reward">{item.reward}</span>}</td><td className="copy-cell"><CopyCode value={item.code}/></td></tr>):<tr><td colSpan={2} className="empty">No codes have been manually confirmed as working yet.</td></tr>}</tbody></table></div>
+          <p className="muted small">Code availability can change at any time. The date above is updated manually after checking.</p>
+        </section>
+        <section className="code-section">
+          <h2>Expired Codes</h2>
+          {expired.length?<ul className="expired-list">{expired.map(code=><li key={code}>{code}</li>)}</ul>:<p className="muted">No expired codes have been added yet.</p>}
+        </section>
+        <section className="code-section tutorial">
+          <h2>How to Redeem Codes in {entry.name}</h2>
+          <div className="tutorial-steps">{guide.map((step,i)=><div className="tutorial-step" key={i}><div className="step-number">{i+1}</div><div><p>{step.text}</p>{step.image&&<img src={step.image} alt={step.imageAlt||`Redemption step ${i+1}`} loading="lazy"/>}</div></div>)}</div>
+          <p className="muted small">Only redeem codes inside the official Roblox game. Never share your password with third-party code websites.</p>
+        </section>
+      </article>
+      <aside className="code-sidebar" aria-label="Advertisement space">
+        <div className="ad-placeholder"><span>ADVERTISEMENT</span><p>Reserved for a future display advertisement</p></div>
+      </aside>
+    </div>
+  </main>;
+}
