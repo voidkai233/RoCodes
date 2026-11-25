@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import Link from 'next/link';
 import {Home,Gamepad2,Trophy,Search,Info} from 'lucide-react';
 import './globals.css';
+import {ThemeToggle} from './components';
 const url=process.env.NEXT_PUBLIC_SITE_URL||'https://rocodes.pages.dev';
 export const metadata:Metadata={metadataBase:new URL(url),title:{default:'BloxRadar — Roblox Codes & Game Rankings',template:'%s | BloxRadar'},description:'Find Roblox game codes, browse game rankings and explore rankings by genre. Independent Roblox game discovery guide.',robots:{index:true,follow:true},openGraph:{type:'website',siteName:'BloxRadar'},verification:{google:process.env.GOOGLE_SITE_VERIFICATION||undefined}};
 export default function Layout({children}:{children:React.ReactNode}){
@@ -19,6 +20,7 @@ return <html lang="en"><body>
 <button type="submit" aria-label="Search"><Search size={19} aria-hidden="true"/></button>
 </form>
 <Link className="nav-pill nav-about" href="/about"><Info size={17} aria-hidden="true"/><span>About</span></Link>
+<ThemeToggle/>
 </div>
 </div></header>
 {children}
