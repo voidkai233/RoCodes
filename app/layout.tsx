@@ -4,11 +4,11 @@ import {Home,Gamepad2,Trophy,Search,Info} from 'lucide-react';
 import './globals.css';
 import {ThemeToggle} from './components';
 const url=process.env.NEXT_PUBLIC_SITE_URL||'https://rocodes.pages.dev';
-export const metadata:Metadata={metadataBase:new URL(url),title:{default:'BloxRadar — Roblox Codes & Game Rankings',template:'%s | BloxRadar'},description:'Find Roblox game codes, browse game rankings and explore rankings by genre. Independent Roblox game discovery guide.',robots:{index:true,follow:true},openGraph:{type:'website',siteName:'BloxRadar'},verification:{google:process.env.GOOGLE_SITE_VERIFICATION||undefined}};
+export const metadata:Metadata={metadataBase:new URL(url),title:{default:'RoCodes — Roblox Codes & Game Rankings',template:'%s | RoCodes'},description:'Find Roblox game codes, browse game rankings and explore rankings by genre. Independent Roblox game discovery guide.',robots:{index:true,follow:true},openGraph:{type:'website',siteName:'RoCodes'},verification:{google:process.env.GOOGLE_SITE_VERIFICATION||undefined}};
 export default function Layout({children}:{children:React.ReactNode}){
 return <html lang="en"><body>
 <header className="header"><div className="shell nav nav-new">
-<Link href="/" className="logo" aria-label="BloxRadar home"><span className="mark">◆</span> Blox<span>Radar</span></Link>
+<Link href="/" className="logo" aria-label="RoCodes home"><span className="mark">◆</span> Ro<span>Codes</span></Link>
 <nav className="main-navigation" aria-label="Main navigation">
 <Link className="nav-pill" href="/"><Home size={17} aria-hidden="true"/><span>Home</span></Link>
 <Link className="nav-pill" href="/codes"><Gamepad2 size={17} aria-hidden="true"/><span>Game Codes</span></Link>
@@ -24,5 +24,5 @@ return <html lang="en"><body>
 </div>
 </div></header>
 {children}
-<footer><div className="shell foot"><div><strong>◆ BloxRadar</strong><p>Independent Roblox game discovery and code tracking. Not affiliated with Roblox Corporation.</p></div><div className="footlinks"><Link href="/about">About</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/contact">Contact</Link></div></div></footer>
+<footer><div className="shell foot"><div><strong>◆ RoCodes</strong><p>Independent Roblox game discovery and code tracking. Not affiliated with Roblox Corporation.</p></div><div className="footlinks"><Link href="/about">About</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/contact">Contact</Link></div></div></footer>
 </body></html>}
