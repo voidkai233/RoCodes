@@ -1,4 +1,4 @@
-# RoCodes / BloxRadar — Cloudflare Pages static edition
+# RoCodes / RoCodes — Cloudflare Pages static edition
 
 This build is configured for Cloudflare Pages **Next.js (Static HTML Export)**.
 
